@@ -9,19 +9,21 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+import os
 from pathlib import Path
+from dotenv import load_dotenv
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+# Load variables from .env
+load_dotenv(BASE_DIR / ".env")
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-!8f$lkqadjidij72phtf*x5bu)mbf8ehlxe&m5c_adw!^p@0-4'
-
+SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -37,16 +39,31 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'corsheaders',
+    'user',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.facebook',
+    'allauth.socialaccount.providers.twitter',
+
 ]
+AUTH_USER_MODEL = 'user.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = 'artmarket.urls'
@@ -65,6 +82,12 @@ TEMPLATES = [
         },
     },
 ]
+AUTHENTICATION_BACKENDS = [
+    
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+    
+]
 
 WSGI_APPLICATION = 'artmarket.wsgi.application'
 
@@ -74,8 +97,12 @@ WSGI_APPLICATION = 'artmarket.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv("DB_NAME"),
+        'USER': os.getenv("DB_USER"),
+        'PASSWORD': os.getenv("DB_PASSWORD"),
+        'HOST': os.getenv("DB_HOST"),
+        'PORT': os.getenv("DB_PORT"),
     }
 }
 
@@ -120,3 +147,25 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+SITE_ID = 1
+ACCOUNT_LOGIN_METHODS = ['email']
+ACCOUNT_EMAIL_VERIFICATION = 'none' 
+LOGIN_URL = '/accounts/login/' 
+LOGIN_REDIRECT_URL = '/'
+ACCOUNT_ADAPTER = 'user.adapters.CustomAccountAdapter'
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+CORS_ALLOW_CREDENTIALS = True
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication', # Optional, for browsable API
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ],
+}
